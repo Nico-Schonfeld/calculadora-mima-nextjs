@@ -23,13 +23,31 @@ interface Material {
   price: number;
 }
 
+const multiplicativeMaterials = [
+  "thread",
+  "threads",
+  "cover",
+  "cases",
+  "shipping",
+  "cups",
+  "hilos",
+  "hilo",
+  "taza",
+  "tazas",
+  "envio",
+  "envios",
+  "comisionista",
+  "comisionistas",
+];
+
 export default function DressmakerBudgetCalculator() {
   const [materials, setMaterials] = useState<Material[]>([
     { name: "", quantity: 0, price: 0 },
   ]);
   const [subtotal, setSubtotal] = useState(0);
-  const [additionalCost, setAdditionalCost] = useState(0);
   const [total, setTotal] = useState(0);
+  const [totalWith10Percent, setTotalWith10Percent] = useState(0);
+  const [totalWith15Percent, setTotalWith15Percent] = useState(0);
   const [activeTab, setActiveTab] = useState("materials");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -57,6 +75,7 @@ export default function DressmakerBudgetCalculator() {
     const formData = new FormData(e.currentTarget);
     const materialData: Material[] = [];
     let isValid = false;
+    let sum = 0;
 
     for (let i = 0; i < materials.length; i++) {
       const name = formData.get(`material-${i}`) as string;
@@ -66,34 +85,41 @@ export default function DressmakerBudgetCalculator() {
       if (name && !isNaN(quantity) && !isNaN(price)) {
         materialData.push({ name, quantity, price });
         isValid = true;
+
+        if (
+          multiplicativeMaterials.some((m) => name.toLowerCase().includes(m))
+        ) {
+          sum += quantity * price;
+        } else {
+          // Fabric calculation
+          sum += price + (quantity / 100) * price;
+        }
       }
     }
 
     if (!isValid) {
-      toast.error("Please complete at least one material before calculating.");
+      toast.error("Por favor complete al menos un material antes de calcular.");
       return;
     }
 
-    const sum = materialData.reduce((acc, material) => {
-      return acc + material.quantity * material.price;
-    }, 0);
-    const additional = sum * 0.15;
-
+    const finalTotal = sum * 3;
     setMaterials(materialData);
     setSubtotal(sum);
-    setAdditionalCost(additional);
-    setTotal(sum + additional);
+    setTotal(finalTotal);
+    setTotalWith10Percent(finalTotal * 1.1);
+    setTotalWith15Percent(finalTotal * 1.15);
     setActiveTab("summary");
-    toast.success("Budget calculated successfully!");
+    toast.success("Presupuesto calculado correctamente!");
   };
 
   const startNewCalculation = () => {
     setMaterials([{ name: "", quantity: 0, price: 0 }]);
     setSubtotal(0);
-    setAdditionalCost(0);
     setTotal(0);
+    setTotalWith10Percent(0);
+    setTotalWith15Percent(0);
     setActiveTab("materials");
-    toast.info("Started a new calculation.");
+    toast.info("Comenzó un nuevo cálculo.");
   };
 
   const handleTabChange = (value: string) => {
@@ -101,27 +127,29 @@ export default function DressmakerBudgetCalculator() {
       value !== "materials" &&
       !materials.some((m) => m.name && m.quantity && m.price)
     ) {
-      toast.error("Please complete at least one material before proceeding.");
+      toast.error(
+        "Por favor complete al menos un material antes de continuar."
+      );
       return;
     }
     setActiveTab(value);
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto h-auto">
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="materials">
             <Scissors className="w-4 h-4 mr-2" />
-            Materials
+            Materiales
           </TabsTrigger>
           <TabsTrigger value="summary">
             <Calculator className="w-4 h-4 mr-2" />
-            Summary
+            Sumas
           </TabsTrigger>
           <TabsTrigger value="installments">
             <DollarSign className="w-4 h-4 mr-2" />
-            Installments
+            Cuotas
           </TabsTrigger>
         </TabsList>
         <TabsContent value="materials">
@@ -144,7 +172,7 @@ export default function DressmakerBudgetCalculator() {
                             onChange={(e) =>
                               updateMaterial(index, "name", e.target.value)
                             }
-                            placeholder="e.g., Silk, Lace"
+                            placeholder="Hilos, Telas..."
                           />
                         </div>
                         <div className="space-y-2">
@@ -231,19 +259,25 @@ export default function DressmakerBudgetCalculator() {
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <h3 className="text-lg font-semibold mb-2">
-                      Additional Cost (15%)
-                    </h3>
-                    <p className="text-3xl font-bold">
-                      ${additionalCost.toFixed(2)}
-                    </p>
+                    <h3 className="text-lg font-semibold mb-2">Total (x3)</h3>
+                    <p className="text-3xl font-bold">${total.toFixed(2)}</p>
                   </CardContent>
                 </Card>
               </div>
               <Card className="bg-primary text-primary-foreground">
                 <CardContent className="pt-6">
-                  <h3 className="text-xl font-semibold mb-2">Total Budget</h3>
-                  <p className="text-4xl font-bold">${total.toFixed(2)}</p>
+                  <h3 className="text-xl font-semibold mb-2">Total with 10%</h3>
+                  <p className="text-4xl font-bold">
+                    ${totalWith10Percent.toFixed(2)}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="bg-secondary text-secondary-foreground">
+                <CardContent className="pt-6">
+                  <h3 className="text-xl font-semibold mb-2">Total with 15%</h3>
+                  <p className="text-4xl font-bold">
+                    ${totalWith15Percent.toFixed(2)}
+                  </p>
                 </CardContent>
               </Card>
               <div className="flex justify-center">
@@ -257,6 +291,13 @@ export default function DressmakerBudgetCalculator() {
         </TabsContent>
         <TabsContent value="installments">
           <CardContent>
+            <div className="flex justify-center items-center w-full py-20">
+              <Button onClick={startNewCalculation}>
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Start New Calculation
+              </Button>
+            </div>
+
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Calculate Installments</h3>
               <p>Use the calculator below to determine installment options:</p>
