@@ -17,7 +17,7 @@ interface Material {
 }
 
 const multiplicativeMaterials = [
-  "hilos", "hilo", "taza", "tazas", "envio", "envios", "comisionista", "comisionistas",
+  "hilos", "hilo", "tasa", "tasas", "envio", "envios", "comisionista", "comisionistas", "ballenas", "ballena", "funda", "fundas", "cordon", "cordones", "elastico", "elasticos","cierres","cierre","gancho","ganchos","piedras","piedra"
 ]
 
 export default function DressmakerBudgetCalculator() {
