@@ -16,12 +16,6 @@ interface Material {
   price: number
 }
 
-const multiplicativeMaterials = [
-  "hilos", "hilo", "tasa", "tasas", "envio", "envios", "comisionista", "comisionistas",
-  "ballenas", "ballena", "funda", "fundas", "cordon", "cordones", "elastico", "elasticos",
-  "cierres", "cierre", "gancho", "ganchos", "piedras", "piedra", "botones", "boton",
-]
-
 const DressmakerBudgetCalculator = () => {
   const [materials, setMaterials] = useState<Material[]>([{ name: "", quantity: 0, price: 0 }])
   const [subtotal, setSubtotal] = useState(0)
@@ -62,13 +56,7 @@ const DressmakerBudgetCalculator = () => {
       if (name && !isNaN(quantity) && !isNaN(price)) {
         materialData.push({ name, quantity, price })
         isValid = true
-
-        if (Number.isInteger(quantity) || multiplicativeMaterials.some(m => name.toLowerCase().includes(m))) {
-          sum += quantity * price
-        } else {
-          // Fabric calculation for decimal quantities
-          sum += (quantity / 100) * price
-        }
+        sum += quantity * price
       }
     }
 
@@ -148,7 +136,7 @@ const DressmakerBudgetCalculator = () => {
                             type="text"
                             value={material.quantity}
                             onChange={(e) => updateMaterial(index, "quantity", e.target.value)}
-                            placeholder="Ej: 4 o 1.40"
+                            placeholder="Ej: 4 o 3.50"
                           />
                         </div>
                         <div className="space-y-2">
